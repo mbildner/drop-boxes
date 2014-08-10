@@ -1,0 +1,164 @@
+<html>
+<head>
+	<title>tetris</title>
+	<style type="text/css">
+		body {
+			background-color: blue;
+		}
+
+		.game-box {
+			display: inline-block;
+			width: 1.25%;
+			height: 2.5%;
+		}
+
+		.game-box.occuppied {
+			background-color: red;
+		}
+
+	</style>
+
+</head>
+<body>
+
+	<div class="game-board">
+	</div>
+
+	<script>
+		function buildGrid (rows, cols) {
+			var grid = [];
+			for ( var r=0; r<rows; r++) {
+				grid.push([]);
+				for (var c=0; c<cols; c++) {
+					grid[r].push({
+						piece: board.children[r].children[c]
+					});
+				}
+			}
+
+			return grid;
+		}
+
+		function buildBoard (root, rows, cols) {
+			for (var r = 0; r<rows; r++) {
+				var rowDiv = document.createElement('div');
+				rowDiv.classList.add('game-row');
+				for (var c = 0; c<cols; c++) {
+					var boxDiv = document.createElement('div');
+					boxDiv.classList.add('game-box');
+					rowDiv.appendChild(boxDiv);
+				}
+				root.appendChild(rowDiv);
+			}
+		}
+
+		function renderGrid () {
+			grid.forEach(function (row) {
+				row.forEach(function (box) {
+					if (box.occuppied) {
+						box.piece.classList.add('occuppied');
+					}
+					else {
+						box.piece.classList.remove('occuppied');
+					}
+				});
+			});
+		}
+
+		function moveBox (box, deltaRow, deltaCol) {
+			if (box.isFrozen) {return; }
+
+			var newRow = box.row + deltaRow;
+			var newCol = box.col + deltaCol;
+
+			if (newRow >= grid.length) {
+				newRow = grid.length - 1;
+				box.isFrozen = true;
+			}
+			else if (newRow < 0) {
+				newRow = 0;
+			}
+
+			// if (newCol >= grid[0].length || newCol < 0) {
+			// 	newCol = 0;
+			// }
+
+			var canMove = !grid[newRow][newCol].occuppied;
+
+			if (!canMove) {
+				box.isFrozen = true;
+			}
+			else {
+				grid[box.row][box.col].occuppied = false;
+				box.row = newRow;
+				box.col = newCol;
+				grid[box.row][box.col].occuppied = true;
+			}
+
+		}
+
+		function getStartingBoxes (cols) {
+			var boxes = [];
+
+			for (var c=0; c<cols; c++) {
+				boxes.push({
+					row: 0,
+					col: c,
+					isFrozen: false
+				});
+			}
+
+			return boxes;
+		}
+
+		function placeBox (box) {
+			grid[box.row][box.col].occuppied = true;
+		}
+
+		function sample (list) {
+			return list[Math.floor(Math.random() * list.length)];
+		}
+
+		var board = document.getElementsByClassName('game-board')[0];
+		var rows = 40;
+		var cols = 80;
+
+		buildBoard(board, rows, cols);
+
+		var grid = buildGrid(rows, cols);
+
+		var boxes = getStartingBoxes(cols);
+
+		boxes.forEach(placeBox);
+
+
+
+		function tick () {
+			boxes.forEach(function (box) {
+				if (box.isFrozen) {
+					var newBox = {row: 0, col: box.col, isFrozen: false}
+
+					boxes.push(newBox);
+					placeBox(newBox);
+				}
+			});
+
+			boxes = boxes.filter(function (box) {
+				return !box.isFrozen;
+			});
+
+			moveBox(sample(boxes), 1, 0);
+
+			renderGrid();
+
+			window.requestAnimationFrame(tick);
+
+		}
+
+		window.requestAnimationFrame(tick);
+
+	</script>
+
+
+</body>
+</html>
